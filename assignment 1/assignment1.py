@@ -20,6 +20,27 @@ def search_ratings_of_neighbors(rating_data,neighbor_data):
     nearest_ratings = rating_data.loc[neighbor_data.index]
     return nearest_ratings
 
+def predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors, selected_movie):
+    user_similarity = neighbors.values
+    ratings_values = ratings_of_neighbors.values
+    mean_of_neighbors = ratings_of_neighbors.mean(axis=1, skipna=True).values
+    mean_of_user = selected_user_ratings.mean(skipna=True)
+
+    movie_score_compined = 0
+    similarity_compined = 0
+    for i in range(0,user_similarity.size):
+        if np.isnan(ratings_values[i][selected_movie]) == False:
+            movie_score_compined += user_similarity[i]*(ratings_values[i][selected_movie]-mean_of_neighbors[i])
+            similarity_compined += user_similarity[i]
+
+    prediction_of_movie = mean_of_user + movie_score_compined/similarity_compined
+    return prediction_of_movie
+
 selected_user = 249
 neighbors = search_nearest_neighbors(ratings_pearson_correlation,selected_user,10)
-print(search_ratings_of_neighbors(ratings_pivot, neighbors))
+ratings_of_neighbors = search_ratings_of_neighbors(ratings_pivot, neighbors)
+print(ratings_of_neighbors)
+
+selected_user_ratings = ratings_pivot.loc[selected_user]
+prediction_of_movie = predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors, selected_movie=0)
+print(prediction_of_movie)
