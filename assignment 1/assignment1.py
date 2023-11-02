@@ -20,27 +20,35 @@ def search_ratings_of_neighbors(rating_data,neighbor_data):
     nearest_ratings = rating_data.loc[neighbor_data.index]
     return nearest_ratings
 
-def predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors, selected_movie):
+def predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors):
     user_similarity = neighbors.values
     ratings_values = ratings_of_neighbors.values
     mean_of_neighbors = ratings_of_neighbors.mean(axis=1, skipna=True).values
     mean_of_user = selected_user_ratings.mean(skipna=True)
+    prediction_for_user = selected_user_ratings.copy()
+    
+    for movie in range(0,prediction_for_user.values.size):
+        if np.isnan(prediction_for_user.values[movie]) == True:
+            movie_score_compined = 0
+            similarity_compined = 0
+            for user in range(0,user_similarity.size):
+                if np.isnan(ratings_values[user][movie]) == False:
+                    movie_score_compined += user_similarity[user]*(ratings_values[user][movie]-mean_of_neighbors[user])
+                    similarity_compined += user_similarity[user]
+            if similarity_compined != 0:
+                prediction_of_movie = mean_of_user + movie_score_compined/similarity_compined
+                prediction_for_user.values[movie] = prediction_of_movie
+            else: prediction_for_user.values[movie] = None
+        else: prediction_for_user.values[movie] = None
 
-    movie_score_compined = 0
-    similarity_compined = 0
-    for i in range(0,user_similarity.size):
-        if np.isnan(ratings_values[i][selected_movie]) == False:
-            movie_score_compined += user_similarity[i]*(ratings_values[i][selected_movie]-mean_of_neighbors[i])
-            similarity_compined += user_similarity[i]
-
-    prediction_of_movie = mean_of_user + movie_score_compined/similarity_compined
-    return prediction_of_movie
+    return prediction_for_user
 
 selected_user = 249
 neighbors = search_nearest_neighbors(ratings_pearson_correlation,selected_user,10)
 ratings_of_neighbors = search_ratings_of_neighbors(ratings_pivot, neighbors)
-print(ratings_of_neighbors)
+#print(ratings_of_neighbors)
 
 selected_user_ratings = ratings_pivot.loc[selected_user]
-prediction_of_movie = predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors, selected_movie=0)
-print(prediction_of_movie)
+print(selected_user_ratings)
+prediction_of_movies = predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors)
+print(prediction_of_movies)
