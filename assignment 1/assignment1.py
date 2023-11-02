@@ -67,4 +67,4 @@ highest_predictions_ids = highest_predictions.index
 # Printing names of 10 highest predictions for selected user
 for prediction in highest_predictions_ids:
     movie = movies.query('movieId == @prediction')
-    print(movie['t'])
+    print(movie.get(key='title').values)
