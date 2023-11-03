@@ -17,17 +17,29 @@ def search_ratings_of_neighbors(rating_data,neighbor_data):
     nearest_ratings = rating_data.loc[neighbor_data.index]
     return nearest_ratings
 
+# Predics movie ratings for selected user by using neighbors ratings.
+# Prediction is made with an common prediction function.
+# If neighbor have not rated the movie then we skip that neighbor from the function
+# Eventually returns a series that contains None values for movies user have already rated and
+# None values for movies none of the neighbors have reviewed and for the others the rating.
 def predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors):
     user_similarity = neighbors.values
     ratings_values = ratings_of_neighbors.values
     mean_of_neighbors = ratings_of_neighbors.mean(axis=1, skipna=True).values
     mean_of_user = selected_user_ratings.mean(skipna=True)
+    # Copys series of users ratings to be used for predicted ratings
     prediction_for_user = selected_user_ratings.copy()
     
+    # Looping through all the movies and skipping and setting None value for those user has reviewed
     for movie in range(0,prediction_for_user.values.size):
         if np.isnan(prediction_for_user.values[movie]) == True:
             movie_score_compined = 0
             similarity_compined = 0
+            # Looping through all the neighbors, skippings those who have not reviewed the movie
+            # If none of the neighbors have reviewed the movie we set prediciton for movie None
+            # In Loop we calculate their ratings by comparing is it higher or lover then their average and
+            # use similarity to weight the rating.Then we calucate them together. In the end we divide the result
+            # with mean of neighbors similarity and add it to mean of selected users to get prediction of the movie.
             for user in range(0,user_similarity.size):
                 if np.isnan(ratings_values[user][movie]) == False:
                     movie_score_compined += user_similarity[user]*(ratings_values[user][movie]-mean_of_neighbors[user])
