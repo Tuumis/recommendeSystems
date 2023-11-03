@@ -9,10 +9,15 @@ ratings = pd.read_csv("ml-latest-small/ratings.csv",usecols=range(3))
 ratings_pivot = ratings.pivot(index='userId', columns='movieId', values='rating')
 
 
+# Function gets user similarity data for example pearson correlation 
+# and user whose neighbours wanted and wanted amount of neighbors
+# It returns a dataframe containing wanted amount of most similar users
 def search_nearest_neighbors(similarity_data, user_id, amount_of_neighbors):
     neighbors = similarity_data[user_id].sort_values(ascending=False).iloc[1:amount_of_neighbors+1]
     return (neighbors)
 
+# Returns ratings of neighbors given as a parameter.
+# Searches ratings from ratings dataframe by userIds of neighbors
 def search_ratings_of_neighbors(rating_data,neighbor_data):
     nearest_ratings = rating_data.loc[neighbor_data.index]
     return nearest_ratings
@@ -36,9 +41,9 @@ def predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors):
             movie_score_compined = 0
             similarity_compined = 0
             # Looping through all the neighbors, skippings those who have not reviewed the movie
-            # If none of the neighbors have reviewed the movie we set prediciton for movie None
-            # In Loop we calculate their ratings by comparing is it higher or lover then their average and
-            # use similarity to weight the rating.Then we calucate them together. In the end we divide the result
+            # If none of the neighbors have reviewed the movie we set prediction for movie None
+            # In Loop we calculate their ratings by comparing is it higher or lover than their average and
+            # use similarity to weight the rating.Then we calculate them together. In the end we divide the result
             # with mean of neighbors similarity and add it to mean of selected users to get prediction of the movie.
             for user in range(0,user_similarity.size):
                 if np.isnan(ratings_values[user][movie]) == False:
@@ -76,7 +81,7 @@ highest_predictions = prediction_of_movies.sort_values(ascending=False).head(10)
 # MovieIds of top 10 predictions 
 highest_predictions_ids = highest_predictions.index
 
-# Printing names of 10 highest predictions for selected user
+# Printing movie titles of 10 highest predictions for selected user
 for prediction in highest_predictions_ids:
     movie = movies.query('movieId == @prediction')
     print(movie.get(key='title').values)
