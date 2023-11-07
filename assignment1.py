@@ -60,47 +60,51 @@ def predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors):
 
     return prediction_for_user
 
-# (a)
-print(ratings.head(3))
-print(ratings.count())
+def main():
+    # (a)
+    print(ratings.head(3))
+    print(ratings.count())
 
-# (b)
-# Similarity of users with Pearson correlation
-ratings_pearson_correlation = ratings_pivot.T.corr('pearson')
-print(ratings_pearson_correlation)
+    # (b)
+    # Similarity of users with Pearson correlation
+    ratings_pearson_correlation = ratings_pivot.T.corr('pearson')
+    print(ratings_pearson_correlation)
 
-# (b)
-# Selecting user and searching 10 nearest users
-selected_user = 249
-neighbors = search_nearest_neighbors(ratings_pearson_correlation,selected_user,10)
-ratings_of_neighbors = search_ratings_of_neighbors(ratings_pivot, neighbors)
-print(ratings_of_neighbors)
+    # (b)
+    # Selecting user and searching 10 nearest users
+    selected_user = 249
+    neighbors = search_nearest_neighbors(ratings_pearson_correlation,selected_user,10)
+    ratings_of_neighbors = search_ratings_of_neighbors(ratings_pivot, neighbors)
+    print(ratings_of_neighbors)
 
-# (b)
-# Ratings of selected user
-selected_user_ratings = ratings_pivot.loc[selected_user]
-print(selected_user_ratings)
+    # (b)
+    # Ratings of selected user
+    selected_user_ratings = ratings_pivot.loc[selected_user]
+    print(selected_user_ratings)
 
-# (b)
-# Counting predictions to all movies that are rated any of neighbors
-prediction_of_movies = predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors)
+    # (b)
+    # Counting predictions to all movies that are rated any of neighbors
+    prediction_of_movies = predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors)
 
-# (d)
-highest_predictions = prediction_of_movies.sort_values(ascending=False).head(10)
-# MovieIds of top 10 predictions 
-highest_predictions_ids = highest_predictions.index
+    # (d)
+    highest_predictions = prediction_of_movies.sort_values(ascending=False).head(10)
+    # MovieIds of top 10 predictions 
+    highest_predictions_ids = highest_predictions.index
 
-# (d)
-# Printing movie titles of 10 highest predictions for selected user
-for prediction in highest_predictions_ids:
-    movie = movies.query('movieId == @prediction')
-    print(movie.get(key='title').values)
+    # (d)
+    # Printing movie titles of 10 highest predictions for selected user
+    for prediction in highest_predictions_ids:
+        movie = movies.query('movieId == @prediction')
+        print(movie.get(key='title').values)
 
-# (e)
-# Spearman rank correlation works beter if it the data is limited and the movie
-# distribution might not follow normal distribution. Spearman rank correlation
-# handles efficenly the non-linear patterns instead of Peaterson correlation.
-# Could be added that one good thing is that the bouth are implemented same way
-# which allows efficent usage debending the wanted results or the dataset in case.
-# Implementation happens the same way as Pearson correlation:
-ratings_spearman_correlation = ratings_pivot.T.corr('spearman')
+    # (e)
+    # Spearman rank correlation works beter if it the data is limited and the movie
+    # distribution might not follow normal distribution. Spearman rank correlation
+    # handles efficenly the non-linear patterns instead of Peaterson correlation.
+    # Could be added that one good thing is that the bouth are implemented same way
+    # which allows efficent usage debending the wanted results or the dataset in case.
+    # Implementation happens the same way as Pearson correlation:
+    ratings_spearman_correlation = ratings_pivot.T.corr('spearman')
+
+if __name__ == "__main__":
+    main()
