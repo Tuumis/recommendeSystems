@@ -3,12 +3,23 @@ import pandas as pd
 from assignment1 import search_nearest_neighbors, search_ratings_of_neighbors, predict_movie_score 
 
 def average_of_users_predictions(ratings_pivot, ratings_pearson_correlation,selected_users):
+    users_predictions = []
     for user in selected_users:
         neighbors = search_nearest_neighbors(ratings_pearson_correlation,user,10)
         ratings_of_neighbors = search_ratings_of_neighbors(ratings_pivot, neighbors)
         selected_user_ratings = ratings_pivot.loc[user]
         prediction_of_movies = predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors)
-        print(prediction_of_movies)
+        users_predictions.append(prediction_of_movies.values)
+    
+    users_average_predictions = []
+    for movie in range(0,users_predictions[0].size):
+        sum_of_movie_rating = 0
+        for user in users_predictions:
+            sum_of_movie_rating += user[movie]
+        users_average_predictions.append(sum_of_movie_rating/len(users_predictions))
+    return users_average_predictions
+
+
 
 def main():
     # Reading data from files
