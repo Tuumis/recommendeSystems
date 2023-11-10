@@ -51,6 +51,19 @@ def print_top_ten_recommendations(recomendations):
         movie = movies.query('movieId == @prediction')
         print(movie.get(key='title').values)
 
+def weighted_average_of_users_ratings(users_predictions, weights):
+    predictions = []
+    ratings_of_item = []
+    for movie in range(0,users_predictions[0].size):
+        for user in users_predictions:
+            ratings_of_item.append(user[movie])
+        ratings_of_item.sort
+        prediction = np.average(a=ratings_of_item, weights=weights)
+        ratings_of_item = []
+        predictions.append(prediction)
+    return predictions
+
+
 def main():
     # Data to form where movieIds are columns and each row presents all ratings of one user
     ratings_pivot = ratings.pivot(index='userId', columns='movieId', values='rating')
@@ -66,6 +79,11 @@ def main():
     users_misery_predictions = pd.Series(misery_of_users_predictions(users_predictions))
     print('Least misery predictions:')
     print_top_ten_recommendations(users_misery_predictions)
+    
+    users_weighted_avg_predictions = pd.Series(weighted_average_of_users_ratings(users_predictions,[0.3, 0.4, 0.3]))
+
+
+
 
 if __name__ == "__main__":
     main()
