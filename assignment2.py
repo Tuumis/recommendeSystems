@@ -7,38 +7,27 @@ movies = pd.read_csv("ml-latest-small/movies.csv")
 ratings = pd.read_csv("ml-latest-small/ratings.csv",usecols=range(3))
 
 def average_of_users_predictions(users_predictions):
-    users_average_predictions = []
-    for movie in range(0,users_predictions[0].size):
-        sum_of_movie_rating = 0
-        for user in users_predictions:
-            sum_of_movie_rating += user[movie]
-        users_average_predictions.append(sum_of_movie_rating/len(users_predictions))
+    movie_means = users_predictions.mean(axis=0, skipna=True)
+    users_average_predictions = pd.DataFrame({'mean_rating': movie_means})
+    users_average_predictions = users_average_predictions.dropna(subset=['mean_rating'])
+    print(users_average_predictions)
     return users_average_predictions
 
 def predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users):
-    users_predictions = []
+    movieIds = ratings_pivot.columns
+    users_predictions = pd.DataFrame(columns=movieIds)
     for user in selected_users:
         neighbors = search_nearest_neighbors(ratings_pearson_correlation,user,10)
         ratings_of_neighbors = search_ratings_of_neighbors(ratings_pivot, neighbors)
         selected_user_ratings = ratings_pivot.loc[user]
         prediction_of_movies = predict_movie_score(selected_user_ratings, neighbors, ratings_of_neighbors)
-        users_predictions.append(prediction_of_movies.values)
+        users_predictions.loc[len(users_predictions)] = prediction_of_movies.values
     return users_predictions
 
 def misery_of_users_predictions(users_predictions):
-    users_misery_predictions = []
-    for movie in range(0,users_predictions[0].size):
-        first_iteration = True
-        for user in users_predictions:
-            if np.isnan(user[movie]) == True:
-                rating = user[movie]
-                break
-            elif first_iteration == True:
-                rating = user[movie]
-                first_iteration = False
-            elif user[movie] < rating:
-                rating = user[movie]
-        users_misery_predictions.append(rating)
+    movie_min_ratings = users_predictions.min(axis=0, skipna=True)
+    users_misery_predictions = pd.DataFrame({'misery_rating': movie_min_ratings})
+    users_misery_predictions = users_misery_predictions.dropna(subset=['misery_rating'])
     return users_misery_predictions
 
 def print_top_ten_recommendations(recomendations):
@@ -72,14 +61,15 @@ def main():
 
     selected_users = 249,353,456
     users_predictions = predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users)
-    users_average_predictions = pd.Series(average_of_users_predictions(users_predictions))
+    users_average_predictions = average_of_users_predictions(users_predictions)
     print('Average predictions:')
-    print_top_ten_recommendations(users_average_predictions)
+    print_top_ten_recommendations(users_average_predictions['mean_rating'])
 
-    users_misery_predictions = pd.Series(misery_of_users_predictions(users_predictions))
-    print('Least misery predictions:')
-    print_top_ten_recommendations(users_misery_predictions)
-    
+    #users_misery_predictions = pd.Series(misery_of_users_predictions(users_predictions))
+    users_misery_predictions = misery_of_users_predictions(users_predictions)
+    print('\nLeast misery predictions:')
+    print_top_ten_recommendations(users_misery_predictions['misery_rating'])
+
     users_weighted_avg_predictions = pd.Series(weighted_average_of_users_ratings(users_predictions,[0.3, 0.4, 0.3]))
 
 
