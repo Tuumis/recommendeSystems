@@ -30,6 +30,18 @@ def misery_of_users_predictions(users_predictions):
     users_misery_predictions = users_misery_predictions.dropna(subset=['misery_rating'])
     return users_misery_predictions
 
+# Counts misery average distance: 
+# distance of min rating and average and the distance is subtracted from average rating
+def misery_avg_distance(users_predictions):
+    movie_min_ratings = users_predictions.min(axis=0, skipna=True)
+    movie_means = users_predictions.mean(axis=0, skipna=True)
+    differences = np.abs(movie_means - movie_min_ratings)
+    predictions = movie_means - differences
+    predictions = pd.DataFrame({'misery_avg_predictions': predictions})
+    predictions = predictions.dropna(subset=['misery_avg_predictions'])
+    return predictions
+
+
 def print_top_ten_recommendations(recomendations):
     highest_predictions = recomendations.sort_values(ascending=False).head(10)
     # MovieIds of top 10 predictions 
@@ -39,18 +51,6 @@ def print_top_ten_recommendations(recomendations):
     for prediction in highest_predictions_ids:
         movie = movies.query('movieId == @prediction')
         print(movie.get(key='title').values)
-
-def weighted_average_of_users_ratings(users_predictions, weights):
-    predictions = []
-    ratings_of_item = []
-    for movie in range(0,users_predictions[0].size):
-        for user in users_predictions:
-            ratings_of_item.append(user[movie])
-        ratings_of_item.sort
-        prediction = np.average(a=ratings_of_item, weights=weights)
-        ratings_of_item = []
-        predictions.append(prediction)
-    return predictions
 
 
 def main():
@@ -69,11 +69,10 @@ def main():
     users_misery_predictions = misery_of_users_predictions(users_predictions)
     print('\nLeast misery predictions:')
     print_top_ten_recommendations(users_misery_predictions['misery_rating'])
-
-    users_weighted_avg_predictions = pd.Series(weighted_average_of_users_ratings(users_predictions,[0.3, 0.4, 0.3]))
-
-
-
-
+    # users_weighted_avg_predictions = pd.Series(weighted_average_of_users_ratings(users_predictions,[0.3, 0.4, 0.3]))
+    misery_average_distance_predictions = misery_avg_distance(users_predictions)
+    print('\nMisery average distance predictions')
+    print_top_ten_recommendations(misery_average_distance_predictions['misery_avg_predictions'])
+        
 if __name__ == "__main__":
     main()
