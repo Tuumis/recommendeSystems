@@ -6,6 +6,8 @@ from assignment1 import search_nearest_neighbors, search_ratings_of_neighbors, p
 movies = pd.read_csv("ml-latest-small/movies.csv")
 ratings = pd.read_csv("ml-latest-small/ratings.csv",usecols=range(3))
 
+# a) i)
+# Counts average rating for movie by users predictions
 def average_of_users_predictions(users_predictions):
     movie_means = users_predictions.mean(axis=0, skipna=True)
     users_average_predictions = pd.DataFrame({'mean_rating': movie_means})
@@ -13,6 +15,7 @@ def average_of_users_predictions(users_predictions):
     print(users_average_predictions)
     return users_average_predictions
 
+# Counts predictions to multiple users by using funktions from assigment1.py 
 def predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users):
     movieIds = ratings_pivot.columns
     users_predictions = pd.DataFrame(columns=movieIds)
@@ -24,12 +27,15 @@ def predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_us
         users_predictions.loc[len(users_predictions)] = prediction_of_movies.values
     return users_predictions
 
+# a) ii)
+# Gets misery prediction among the users
 def misery_of_users_predictions(users_predictions):
     movie_min_ratings = users_predictions.min(axis=0, skipna=True)
     users_misery_predictions = pd.DataFrame({'misery_rating': movie_min_ratings})
     users_misery_predictions = users_misery_predictions.dropna(subset=['misery_rating'])
     return users_misery_predictions
 
+# b)
 # Counts misery average distance: 
 # distance of min rating and average and the distance is subtracted from average rating
 def misery_avg_distance(users_predictions):
@@ -41,7 +47,7 @@ def misery_avg_distance(users_predictions):
     predictions = predictions.dropna(subset=['misery_avg_predictions'])
     return predictions
 
-
+# For printing the recomendations
 def print_top_ten_recommendations(recomendations):
     highest_predictions = recomendations.sort_values(ascending=False).head(10)
     # MovieIds of top 10 predictions 
@@ -60,17 +66,19 @@ def main():
     ratings_pearson_correlation = ratings_pivot.T.corr('pearson')
 
     selected_users = 249,353,456
+    # a) i)
     users_predictions = predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users)
     users_average_predictions = average_of_users_predictions(users_predictions)
     print('Average predictions:')
     print_top_ten_recommendations(users_average_predictions['mean_rating'])
 
-    #users_misery_predictions = pd.Series(misery_of_users_predictions(users_predictions))
+    # a) ii)
     users_misery_predictions = misery_of_users_predictions(users_predictions)
     print('\nLeast misery predictions:')
     print_top_ten_recommendations(users_misery_predictions['misery_rating'])
-    # users_weighted_avg_predictions = pd.Series(weighted_average_of_users_ratings(users_predictions,[0.3, 0.4, 0.3]))
     misery_average_distance_predictions = misery_avg_distance(users_predictions)
+
+    # b)
     print('\nMisery average distance predictions')
     print_top_ten_recommendations(misery_average_distance_predictions['misery_avg_predictions'])
         
