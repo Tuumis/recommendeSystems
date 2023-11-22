@@ -6,7 +6,6 @@ from assignment1 import search_nearest_neighbors, search_ratings_of_neighbors, p
 movies = pd.read_csv("ml-latest-small/movies.csv")
 ratings = pd.read_csv("ml-latest-small/ratings.csv",usecols=range(3))
 
-# Poista kun ei tarvita enää testaukseen
 def average_of_users_predictions(users_predictions):
     movie_means = users_predictions.mean(axis=0, skipna=True)
     users_average_predictions = pd.DataFrame({'mean_rating': movie_means})
@@ -37,6 +36,10 @@ def print_top_ten_recommendations(recomendations):
         movie = movies.query('movieId == @prediction')
         print(movie.get(key='title').values)
 
+def weighted_average_of_users_predictions(users_predictions, weights):
+    weighted_predictions = users_predictions * np.array(weights)[:, np.newaxis]
+    return average_of_users_predictions(weighted_predictions)
+
 def weights_withuser_satisfaction(users_predictions, group_predictions):
     weights = []
     group_predictions_top_10 = group_predictions.sort_values('mean_rating',ascending=False).head(10)
@@ -62,7 +65,8 @@ def main():
     # print(users_predictions)
     users_average_predictions = average_of_users_predictions(users_predictions)
     # print_top_ten_recommendations(users_average_predictions['mean_rating'])
-    weights_withuser_satisfaction(users_predictions, users_average_predictions)
+    weights = weights_withuser_satisfaction(users_predictions, users_average_predictions)
+    weighted_average_predictions = weighted_average_of_users_predictions(users_predictions, weights)
         
 if __name__ == "__main__":
     main()
