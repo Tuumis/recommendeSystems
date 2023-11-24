@@ -40,19 +40,19 @@ def weighted_average_of_users_predictions(users_predictions, weights):
     weighted_predictions = users_predictions * np.array(weights)[:, np.newaxis]
     weighted_sum = np.sum(weighted_predictions, axis=0)
     sum_of_weights = np.sum(weights)
-    users_weighted_average_predictions = pd.DataFrame({'weighted_mean_rating': weighted_sum / sum_of_weights})
+    users_weighted_average_predictions = pd.DataFrame({'mean_rating': weighted_sum / sum_of_weights})
     return users_weighted_average_predictions
 
 def weights_withuser_satisfaction(users_predictions, group_predictions):
     weights = []
     group_predictions_top_10 = group_predictions.sort_values('mean_rating',ascending=False).head(10)
     # group_predictions_sorted = (group_predictions_sorted - group_predictions_sorted.min()) /(group_predictions_sorted.max() - group_predictions_sorted.min())
-    print(group_predictions_top_10)
+    #print(group_predictions_top_10)
     for index, user in users_predictions.iterrows():
         user_predictions_for_group_top_10 = user.loc[group_predictions_top_10.index]
         average_of_individual_predictions = user.mean()
         predicted_avg_or_higher = user_predictions_for_group_top_10.loc[lambda r : r > average_of_individual_predictions]
-        print(predicted_avg_or_higher)
+        #print(predicted_avg_or_higher)
         weight = 1 - (len(predicted_avg_or_higher) / 10)
         weights.append(weight)
     return weights    
@@ -70,13 +70,13 @@ def main():
     # print_top_ten_recommendations(users_average_predictions['mean_rating'])
     weights = weights_withuser_satisfaction(users_predictions, users_average_predictions)
     #print(users_average_predictions)
-    
+    #print_top_ten_recommendations(users_average_predictions['mean_rating'])
     for i in range(0,3):
         weighted_average_predictions = weighted_average_of_users_predictions(users_predictions, weights)
-        print(weighted_average_predictions)
+        #print('kierros:', i, weighted_average_predictions)
         weights = weights_withuser_satisfaction(users_predictions, weighted_average_predictions)
-    print(weighted_average_predictions)
-    #print_top_ten_recommendations(weighted_average_predictions)
+
+    print_top_ten_recommendations(weighted_average_predictions['mean_rating'])
         
 if __name__ == "__main__":
     main()
