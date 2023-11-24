@@ -6,12 +6,12 @@ from assignment1 import search_nearest_neighbors, search_ratings_of_neighbors, p
 movies = pd.read_csv("ml-latest-small/movies.csv")
 ratings = pd.read_csv("ml-latest-small/ratings.csv",usecols=range(3))
 
+# Counts group aggregationf with average of individual users' predictions
 def average_of_users_predictions(users_predictions):
     movie_means = users_predictions.mean(axis=0, skipna=True)
     users_average_predictions = pd.DataFrame({'mean_rating': movie_means})
     users_average_predictions = users_average_predictions.dropna(subset=['mean_rating'])
     return users_average_predictions
-
 
 # Counts predictions to multiple users by using funktions from assigment1.py 
 def predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users):
@@ -43,16 +43,18 @@ def weighted_average_of_users_predictions(users_predictions, weights):
     users_weighted_average_predictions = pd.DataFrame({'mean_rating': weighted_sum / sum_of_weights})
     return users_weighted_average_predictions
 
+# Counts user satisfaction and weights based on it.
+# Counts how many of group's movies in top list is recommended for individual user with a score:
+# score >= avg of individual user's predictions
+# Returns a list containing the weights for each selected users
 def weights_withuser_satisfaction(users_predictions, group_predictions):
     weights = []
     group_predictions_top_10 = group_predictions.sort_values('mean_rating',ascending=False).head(10)
-    # group_predictions_sorted = (group_predictions_sorted - group_predictions_sorted.min()) /(group_predictions_sorted.max() - group_predictions_sorted.min())
-    #print(group_predictions_top_10)
     for index, user in users_predictions.iterrows():
+        # Searching user prediction scores for group's top 10 predicted movies
         user_predictions_for_group_top_10 = user.loc[group_predictions_top_10.index]
         average_of_individual_predictions = user.mean()
         predicted_avg_or_higher = user_predictions_for_group_top_10.loc[lambda r : r > average_of_individual_predictions]
-        #print(predicted_avg_or_higher)
         weight = 1 - (len(predicted_avg_or_higher) / 10)
         weights.append(weight)
     return weights    
@@ -65,25 +67,13 @@ def main():
 
     selected_users = 249,353,456
     users_predictions = predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users)
-    # print(users_predictions)
     users_average_predictions = average_of_users_predictions(users_predictions)
-    # print_top_ten_recommendations(users_average_predictions['mean_rating'])
     weights = weights_withuser_satisfaction(users_predictions, users_average_predictions)
-    #print(users_average_predictions)
-    #print_top_ten_recommendations(users_average_predictions['mean_rating'])
     for i in range(0,3):
         weighted_average_predictions = weighted_average_of_users_predictions(users_predictions, weights)
-        #print('kierros:', i, weighted_average_predictions)
+        print('Iteration:', i+1)
         weights = weights_withuser_satisfaction(users_predictions, weighted_average_predictions)
-
-    print_top_ten_recommendations(weighted_average_predictions['mean_rating'])
+        print_top_ten_recommendations(weighted_average_predictions['mean_rating'])
         
 if __name__ == "__main__":
     main()
-
-# Weighted average (Thomas)
-# normalizing and distance calculation (Minja)
-# Show results for selected users 
-# slides and argumentation 
-
-
