@@ -69,12 +69,12 @@ def main():
     users_average_predictions = average_of_users_predictions(users_predictions)
     # print_top_ten_recommendations(users_average_predictions['mean_rating'])
     weights = weights_withuser_satisfaction(users_predictions, users_average_predictions)
-    print(users_average_predictions)
+    #print(users_average_predictions)
     
     for i in range(0,3):
         weighted_average_predictions = weighted_average_of_users_predictions(users_predictions, weights)
         print(weighted_average_predictions)
-        weights = weights_withuser_satisfaction(weighted_average_predictions, users_average_predictions)
+        weights = weights_withuser_satisfaction(users_predictions, weighted_average_predictions)
     print(weighted_average_predictions)
     #print_top_ten_recommendations(weighted_average_predictions)
         
