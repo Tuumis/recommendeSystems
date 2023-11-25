@@ -35,6 +35,7 @@ def print_top_ten_recommendations(recomendations):
         movie = movies.query('movieId == @prediction')
         print(movie.get(key='title').values)
 
+# Counts weighted average from predicitons by using given weights
 def weighted_average_of_users_predictions(users_predictions, weights):
     users_predictions = users_predictions.dropna(axis=1, how='all')
     weighted_predictions = users_predictions * np.array(weights)[:, np.newaxis]
