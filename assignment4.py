@@ -8,8 +8,8 @@ from assignment3 import average_of_users_predictions, predictions_for_users, pri
 movies = pd.read_csv("ml-latest-small/movies.csv")
 ratings = pd.read_csv("ml-latest-small/ratings.csv",usecols=range(3))
 
-def answer_by_ratings(ratings, item):
-    print(ratings)
+# Given an answer depending on the stats the item got from the reviews etc.
+def answer_by_ratings(ratings, item, group_predictions, itemId):
     no_review = 0
     review = 0
     sum_of_ratings = 0
@@ -26,21 +26,19 @@ def answer_by_ratings(ratings, item):
                 liked += 1
             else:
                 disliked += 1
-    #Tulostukset voi siivota pois kun vaan niitten avulla saa järkevät tulokset hommaan.
-    print("no_review", no_review)
-    print("reviw", review)
     if (review != 0):
         average = sum_of_ratings/review
-        print("average", sum_of_ratings/review)
-    print("liked", liked)
-    print("disliked", disliked)
-    print(ratings.size)
     if (no_review == ratings.size):
         print("None of your peers has rated", item)
     elif (liked < disliked):
-        print(liked, "peers like", item, "but", disliked, "dislike it")
+        print(liked, "peers like", item, "but", disliked, "dislike it.")
+    elif (average < 3):
+        print("Average for", item, "by your peers are only", average)
+    elif(group_predictions[itemId] < 3):
+        print("Predicted score for", item, "is only", group_predictions[itemId])
     else:
-        print("Only", liked, "peers liked", item)
+        print(item, "got lower rating prediction then those that are listed.")
+    print()
 
 # Forms explanations for genre related questions 
 # Aggregates results using ratings of similar users and movies in genre rated by them
@@ -62,14 +60,15 @@ def answer_by_ratings_genre(ratings, genre):
         disliked.append(dislikes)
         average.append(rev_avg)
     if sum(review) == 0:
-        print("Any of group members or similar users haven't rated any movies in genre ", genre)
+        print("Any of group members or similar users haven't rated any movies in genre", genre, "\n")
     elif (np.mean(liked) < np.mean(disliked)):
-        print("On average ", np.round(np.mean(liked)), " likes movies in genre ", genre, " but ", np.round(np.mean(disliked)), " dislikes.")
+        print("On average", np.round(np.mean(liked)), "likes movies in genre", genre, "but", np.round(np.mean(disliked)), "dislikes.\n")
     else:
         most_liked = np.argmax(liked)
         most_liked = average[most_liked]
-        print("Mostly", max(liked), " peers likes the same movie in genre ", genre, " with average ", np.round(most_liked,1))
+        print("Mostly", max(liked), "peers likes the same movie in genre", genre, "with average", np.round(most_liked,1), "\n")
 
+# Checks existance of the movie
 def check_if_movie_exist(movie):
     title_to_check = re.sub(r'\(\d{4}\)', '', movie).strip()
     movies_with_index = movies.set_index('movieId')
@@ -78,12 +77,9 @@ def check_if_movie_exist(movie):
     if not matching_movies.empty:
         length_differences = matching_movies.apply(lambda x: abs(len(title_to_check) - len(x)))
         best_match_index = length_differences.idxmin()
-        #Seuraavat kaksi mahdollisesti kommentoitua riviä voi poistaa kun testailu valmis
-        #best_match_title = movies_with_index.loc[best_match_index, 'title']
-        #print(best_match_index, best_match_title)
         return best_match_index
     else:
-        print(movie, "does not exist in database.") 
+        print(movie, "does not exist in database.\n") 
         return None
 
 def handle_question(selected_users, pearson_correlation_data, ratings, group_predictions, question,k=10):
@@ -94,7 +90,6 @@ def handle_question(selected_users, pearson_correlation_data, ratings, group_pre
         neighbors = search_nearest_neighbors(pearson_correlation_data,user,10)
         all_similar_users.extend(neighbors.index.values)
     ratings_of_neighbors = ratings.loc[all_similar_users]
-    #print(ratings_of_neighbors)
     # Handle a why not question
     question = question.lower().split(' ')
     if 'genre' in question:
@@ -103,25 +98,25 @@ def handle_question(selected_users, pearson_correlation_data, ratings, group_pre
         genre_ratings = search_ratings_for_genre(ratings_of_neighbors,genre)
         # Check if dataset contains movies in that genre
         if len(genre_ratings.columns) < 1:
-            print('Movies in this genre does not exist')
+            print('Movies in this genre does not exist\n')
             return
         if search_location_of_genre(group_predictions,genre) < (2 * k):
-            print(k, " is too small number of predictions")
+            print(k, "is too small number of predictions\n")
             return
         answer_by_ratings_genre(genre_ratings,genre)
-    elif 'rank' in question:
-        '''movie = check_if_movie_exist(question[3])
-        if movie is None:
-            return'''
-        
     else:
-        name = ' '.join(question[2:])[:-1].capitalize()
-        print(name)
+        if 'first?' in question:
+            name = ' '.join(question[3:-1]).capitalize()
+        else:
+            name = ' '.join(question[2:])[:-1].capitalize()
         movie = check_if_movie_exist(name)
         if movie is None:
             return
+        if search_location_of_movie(group_predictions,movie) < (2 * k):
+            print(k, "is too small number of predictions\n")
+            return
         ratings_for_movie = search_ratings_for_movie(ratings_of_neighbors, movie)
-        answer_by_ratings(ratings_for_movie, name)
+        answer_by_ratings(ratings_for_movie, name, group_predictions, movie)
         
 
 # Searches ratings in some genre from given part of ratins
@@ -148,9 +143,19 @@ def search_location_of_genre(recommendations, genre):
     for i in range(0,len(movieIds)):
         movie = movieIds[i]
         genres = movies.query('movieId == @movie').get(key='genres').values[0]
-        print(genres)
+        #print(genres)
         if genre.lower() in genres.lower():
             location = i + 1
+            break
+    return location
+
+def search_location_of_movie(recommendations, movie):
+    predictions = recommendations.sort_values(ascending=False)
+    location = -1
+    movieIds = predictions.index
+    for i in range(0,len(movieIds)):
+        location = i + 1
+        if (movie == movieIds[i]):
             break
     return location
 
@@ -163,12 +168,13 @@ def main():
     selected_users = 249,353,456
     users_predictions = predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users)
     users_average_predictions = average_of_users_predictions(users_predictions)
-    predictions_fror_group =users_average_predictions['mean_rating']
-    print_top_ten_recommendations(predictions_fror_group)
-    # search_location_of_genre(users_average_predictions['mean_rating'],'animation')
-    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_fror_group, 'Why not genre documentary in recommendations?')
-    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, 'Why not Matrix?')
-    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, 'Why not rank Matrix first?')
+    predictions_for_group =users_average_predictions['mean_rating']
+    print("Top 10 reccomendations:")
+    print_top_ten_recommendations(predictions_for_group)
+    print("\n***Questions and answers***")
+    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not genre documentary in recommendations?')
+    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not Matrix?')
+    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not rank Matrix first?')
 
 if __name__ == "__main__":
     main()
