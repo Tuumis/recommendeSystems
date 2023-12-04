@@ -48,6 +48,7 @@ def answer_by_ratings_genre(ratings, genre):
     liked = []
     disliked = []
     average = []
+    # Collecting data for aggregating the answer
     for user, ratings in ratings.items():
         no_rev = ratings.isnull().sum()
         rev = ratings.notnull().sum()
@@ -59,6 +60,7 @@ def answer_by_ratings_genre(ratings, genre):
         liked.append(likes)
         disliked.append(dislikes)
         average.append(rev_avg)
+    # Conditions for different answers
     if sum(review) == 0:
         print("Any of group members or similar users haven't rated any movies in genre", genre, "\n")
     elif (np.mean(liked) < np.mean(disliked)):
@@ -82,7 +84,10 @@ def check_if_movie_exist(movie):
         print(movie, "does not exist in database.\n") 
         return None
 
-def handle_question(selected_users, pearson_correlation_data, ratings, group_predictions, question,k=10):
+# Handles three types of wy not questions
+# Forms answers and calls more functions needed to that
+# argument k is an amount of predictions for group, default top 10
+def handle_question(selected_users, pearson_correlation_data, ratings, group_predictions, question,k=1):
     print(question)
     # Collect ratings of all 10 similar users of each group member 
     all_similar_users = []
@@ -127,12 +132,12 @@ def search_ratings_for_genre(ratings,genre):
     ratings_in_genre_avg = np.mean(ratings_in_genre,axis=1)
     return ratings_in_genre
     
+# Searches ratings for given movie from a dataframe 
 def search_ratings_for_movie(ratings, movie):
     return ratings[movie]
 
-
-# Searches from predictions, what is a first location of some genre in sorten movie recommendations list
-# returns location (index starting from 1)
+# Searches from predictions, what is a first location of some genre in sorted movie recommendations list
+# returns location (order starting from 1)
 # If a genre does not exist, returns -1
 def search_location_of_genre(recommendations, genre):
     predictions = recommendations.sort_values(ascending=False)
@@ -149,6 +154,9 @@ def search_location_of_genre(recommendations, genre):
             break
     return location
 
+# Searches from predictions, what is a first location of some movie in sorted movie recommendations list
+# returns location (order starting from 1)
+# If a movie does not exist, returns -1
 def search_location_of_movie(recommendations, movie):
     predictions = recommendations.sort_values(ascending=False)
     location = -1
