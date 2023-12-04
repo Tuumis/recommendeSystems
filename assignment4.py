@@ -177,7 +177,7 @@ def main():
     users_predictions = predictions_for_users(ratings_pivot, ratings_pearson_correlation,selected_users)
     users_average_predictions = average_of_users_predictions(users_predictions)
     predictions_for_group =users_average_predictions['mean_rating']
-    print("Top 10 reccomendations:")
+    print("Top 10 recommendations:")
     print_top_ten_recommendations(predictions_for_group)
     print("\n***Questions and answers***")
     handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not genre documentary in recommendations?')
