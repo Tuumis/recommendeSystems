@@ -16,6 +16,7 @@ def answer_by_ratings(ratings, item, group_predictions, itemId):
     liked = 0
     disliked = 0
     average = 0
+    # Loops the raitings to get statistic about them
     for rating in ratings:
         if np.isnan(rating):
             no_review += 1
@@ -28,6 +29,7 @@ def answer_by_ratings(ratings, item, group_predictions, itemId):
                 disliked += 1
     if (review != 0):
         average = sum_of_ratings/review
+    # Prints result depending the statistics about the item
     if (no_review == ratings.size):
         print("None of your peers has rated", item)
     elif (liked < disliked):
@@ -87,7 +89,7 @@ def check_if_movie_exist(movie):
 # Handles three types of wy not questions
 # Forms answers and calls more functions needed to that
 # argument k is an amount of predictions for group, default top 10
-def handle_question(selected_users, pearson_correlation_data, ratings, group_predictions, question,k=1):
+def handle_question(selected_users, pearson_correlation_data, ratings, group_predictions, question,k=10):
     print(question)
     # Collect ratings of all 10 similar users of each group member 
     all_similar_users = []
@@ -109,17 +111,22 @@ def handle_question(selected_users, pearson_correlation_data, ratings, group_pre
             print(k, "is too small number of predictions\n")
             return
         answer_by_ratings_genre(genre_ratings,genre)
+    # All other questions, so questions that are not about genre
     else:
+        #if question contains contains "first" it is parsed differently
         if 'first?' in question:
             name = ' '.join(question[3:-1]).capitalize()
         else:
             name = ' '.join(question[2:])[:-1].capitalize()
+        # Checks existance of movie
         movie = check_if_movie_exist(name)
         if movie is None:
             return
+        # Checks that if it is not seen only because not enough predictions is shown
         if search_location_of_movie(group_predictions,movie) < (2 * k):
             print(k, "is too small number of predictions\n")
             return
+        # Get's movie ratings ans answers the question by ratings
         ratings_for_movie = search_ratings_for_movie(ratings_of_neighbors, movie)
         answer_by_ratings(ratings_for_movie, name, group_predictions, movie)
         
@@ -181,7 +188,7 @@ def main():
     print_top_ten_recommendations(predictions_for_group)
     print("\n***Questions and answers***")
     handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not genre documentary in recommendations?')
-    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not Matrix?')
+    handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not Spartacus?')
     handle_question(selected_users, ratings_pearson_correlation, ratings_pivot, predictions_for_group, 'Why not rank Matrix first?')
 
 if __name__ == "__main__":
